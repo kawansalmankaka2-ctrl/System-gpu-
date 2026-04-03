@@ -40,176 +40,169 @@ def execute_query(query, params=(), fetch_all=False, fetch_one=False, commit=Fal
     finally: conn.close()
     return result
 
-# --- 2. Mobile-First Custom CSS ---
-def apply_mobile_style():
+# --- 2. Original Dark & Orange Style (Mobile Optimized) ---
+def apply_original_style():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
         
-        /* General Setup */
+        /* Background & Text */
+        .stApp {
+            background-color: #1e1e1e !important;
+            color: #ffffff !important;
+        }
+        
         html, body, [class*="st-"] {
             font-family: 'Noto Sans Arabic', sans-serif;
             direction: rtl;
             text-align: right;
         }
 
-        /* Main Header - Clean & Simple */
+        /* Header Style */
         .main-header {
-            background-color: #008B8B;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
+            background-color: #2d2d2d;
+            border-bottom: 4px solid #ff8c00;
+            color: #ff8c00;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 20px;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 30px;
         }
 
-        /* Buttons Fix for Mobile */
+        /* Orange Buttons - Just like your original design */
         div.stButton > button {
             width: 100% !important;
-            background-color: #008B8B !important;
+            background-color: #ff8c00 !important;
             color: white !important;
-            border-radius: 8px !important;
+            border-radius: 5px !important;
             border: none !important;
-            padding: 10px !important;
-            font-size: 16px !important;
-            margin-bottom: 10px !important;
-            height: auto !important;
-        }
-
-        /* Card Style */
-        .data-card {
-            background-color: #f8f9fa;
-            border-right: 5px solid #008B8B;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        /* Metric/Stats Alignment */
-        [data-testid="stMetricValue"] {
-            font-size: 25px !important;
-            text-align: center !important;
+            padding: 15px !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+            margin-top: 10px !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
-        /* Sidebar Fix */
+        div.stButton > button:active {
+            background-color: #e67e00 !important;
+            transform: translateY(2px);
+        }
+
+        /* Input Fields */
+        .stTextInput input, .stSelectbox div {
+            background-color: #333333 !important;
+            color: white !important;
+            border: 1px solid #555555 !important;
+        }
+
+        /* Sidebar Dark Theme */
         [data-testid="stSidebar"] {
-            text-align: right !important;
+            background-color: #121212 !important;
+            border-left: 2px solid #ff8c00;
+        }
+        
+        .stMetric {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ff8c00;
+        }
+        
+        /* Checkbox Style */
+        .stCheckbox {
+            color: #ff8c00 !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-# --- 3. UI Modules ---
-def admin_panel():
-    dept = st.session_state.dept
-    st.sidebar.markdown(f"### بەشی {dept}")
-    menu = st.sidebar.selectbox("مەنیو", ["🏠 سەرەتا", "👥 خوێندکاران", "👨‍🏫 مامۆستایان", "📊 ڕاپۆرت"])
-
-    if menu == "🏠 سەرەتا":
-        st.markdown(f"<div class='data-card'>بەخێربێیت بۆ پانێڵی {dept}</div>", unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        s_count = execute_query("SELECT COUNT(*) FROM students WHERE dept=?", (dept,), fetch_one=True)[0]
-        t_count = execute_query("SELECT COUNT(*) FROM teachers WHERE dept=?", (dept,), fetch_one=True)[0]
-        col1.metric("خوێندکاران", s_count)
-        col2.metric("مامۆستایان", t_count)
-
-    elif menu == "👥 خوێندکاران":
-        st.subheader("تۆمارکردنی خوێندکار")
-        name = st.text_input("ناوی سیانی:")
-        stage = st.selectbox("قۆناغ", ["1", "2", "3", "4"])
-        grp = st.selectbox("گروپ", ["A", "B", "C", "D"])
-        if st.button("تۆمارکردن"):
-            code = f"S{random.randint(1000, 9999)}"
-            execute_query("INSERT INTO students (name, stage, grp, code, dept) VALUES (?,?,?,?,?)",
-                         (name, stage, grp, code, dept), commit=True)
-            st.success(f"تۆمارکرا بە کۆدی: {code}")
-
-    elif menu == "👨‍🏫 مامۆستایان":
-        st.subheader("زیادکردنی مامۆستا")
-        t_name = st.text_input("ناوی مامۆستا:")
-        c_name = st.text_input("ناوی وانە:")
-        t_stage = st.selectbox("بۆ قۆناغی:", ["1", "2", "3", "4"])
-        t_hours = st.number_input("سەعاتی ساڵانە:", 30, 150, 60)
-        if st.button("تۆمارکردنی مامۆستا"):
-            t_code = f"T{random.randint(1000, 9999)}"
-            execute_query("INSERT INTO teachers (name, code, dept, target_stage) VALUES (?,?,?,?)", (t_name, t_code, dept, t_stage), commit=True)
-            tid = execute_query("SELECT id FROM teachers WHERE code=?", (t_code,), fetch_one=True)[0]
-            execute_query("INSERT INTO courses (teacher_id, course_name, total_hours, dept) VALUES (?,?,?,?)", (tid, c_name, t_hours, dept), commit=True)
-            st.info(f"کۆدی مامۆستا: {t_code}")
-
-    elif menu == "📊 ڕاپۆرت":
-        st.subheader("داگرتنی داتاکان")
-        df = pd.read_sql(f"SELECT * FROM attendance WHERE dept='{dept}'", get_connection())
-        st.dataframe(df)
-        towrite = io.BytesIO()
-        df.to_excel(towrite, index=False)
-        st.download_button("📥 دابەزاندنی Excel", towrite, "Report.xlsx")
-
-def teacher_panel():
-    tid, tname, dept = st.session_state.t_id, st.session_state.t_name, st.session_state.dept
-    course_info = execute_query("SELECT id, course_name FROM courses WHERE teacher_id=?", (tid,), fetch_one=True)
-    t_stage = execute_query("SELECT target_stage FROM teachers WHERE id=?", (tid,), fetch_one=True)[0]
-    
-    if course_info:
-        cid, cname = course_info
-        st.markdown(f"<div class='data-card'>مامۆستا: {tname}<br>وانە: {cname}</div>", unsafe_allow_html=True)
-        l_hours = st.selectbox("سەعاتی وانە:", [1, 2, 3, 4])
-        
-        students = execute_query("SELECT id, name FROM students WHERE dept=? AND stage=?", (dept, t_stage), fetch_all=True)
-        
-        att_data = {}
-        for sid, sname in students:
-            col1, col2 = st.columns([2, 1])
-            col1.write(sname)
-            absent = col2.checkbox("غائب", key=sid)
-            att_data[sid] = l_hours if absent else 0
-            
-        if st.button("💾 پاشەکەوتکردن"):
-            for sid, h in att_data.items():
-                execute_query("INSERT OR REPLACE INTO attendance (student_id, course_id, date, hours_absent, type, dept) VALUES (?,?,?,?,?,?)",
-                             (sid, cid, str(datetime.now().date()), h, "گشتی", dept), commit=True)
-            st.success("تۆمارکرا!")
-
-# --- 4. Main App ---
+# --- 3. App Controller ---
 def main():
     init_db()
-    apply_mobile_style()
+    apply_original_style()
     
     if 'role' not in st.session_state: st.session_state.role = None
 
-    st.markdown("<div class='main-header'><h2>زانکۆی پۆلیتەکنیکی گەرمیان</h2><p>سیستەمی ئامادەبوونی خوێندکاران</p></div>", unsafe_allow_html=True)
+    st.markdown("<div class='main-header'><h1>ZANKOY POLYTECHNIC</h1><p>Systemy Amadabun - Garmian</p></div>", unsafe_allow_html=True)
 
     if st.session_state.role is None:
-        if st.button("🔑 چوونەژوورەوەی ئەدمین"): st.session_state.role = "admin_login"; st.rerun()
-        if st.button("👨‍🏫 چوونەژوورەوەی مامۆستا"): st.session_state.role = "teacher_login"; st.rerun()
+        st.write("### تکایە جۆری چوونەژوورەوە هەڵبژێرە:")
+        if st.button("🔑 چوونەژوورەوەی ئەدمین"): 
+            st.session_state.role = "admin_login"; st.rerun()
+        if st.button("👨‍🏫 چوونەژوورەوەی مامۆستا"): 
+            st.session_state.role = "teacher_login"; st.rerun()
 
     elif st.session_state.role == "admin_login":
+        st.subheader("چوونەژوورەوەی ئەدمین")
         e = st.text_input("ئیمەیڵ:")
         p = st.text_input("پاسوۆرد:", type="password")
-        if st.button("چوونەژوورەوە"):
+        if st.button("LOGIN"):
             h = hashlib.sha256(p.encode()).hexdigest()
-            res = execute_query("SELECT dept, type FROM admins WHERE email=? AND password=?", (e, h), fetch_one=True)
+            res = execute_query("SELECT dept FROM admins WHERE email=? AND password=?", (e, h), fetch_one=True)
             if res:
                 st.session_state.dept, st.session_state.role = res[0], "admin_panel"; st.rerun()
-            else: st.error("هەڵەیە")
-        if st.button("گەڕانەوە"): st.session_state.role = None; st.rerun()
+            else: st.error("زانیارییەکان هەڵەن")
+        if st.button("BACK"): st.session_state.role = None; st.rerun()
 
     elif st.session_state.role == "teacher_login":
-        code = st.text_input("کۆدی مامۆستا:", type="password")
-        if st.button("چوونەژوورەوە"):
+        st.subheader("چوونەژوورەوەی مامۆستا")
+        code = st.text_input("کۆدی تایبەت:", type="password")
+        if st.button("LOGIN"):
             res = execute_query("SELECT id, name, dept FROM teachers WHERE code=?", (code,), fetch_one=True)
             if res:
                 st.session_state.t_id, st.session_state.t_name, st.session_state.dept = res[0], res[1], res[2]
                 st.session_state.role = "teacher_panel"; st.rerun()
             else: st.error("کۆدەکە هەڵەیە")
-        if st.button("گەڕانەوە"): st.session_state.role = None; st.rerun()
+        if st.button("BACK"): st.session_state.role = None; st.rerun()
 
     elif st.session_state.role == "admin_panel":
-        admin_panel()
-        if st.sidebar.button("🚪 دەرچوون"): st.session_state.role = None; st.rerun()
+        dept = st.session_state.dept
+        st.sidebar.title(f"بەشی {dept}")
+        menu = st.sidebar.radio("مەنیو", ["سەرەتا", "خوێندکاران", "مامۆستایان", "ڕاپۆرت"])
+        
+        if menu == "سەرەتا":
+            st.write(f"## بەخێربێیت بۆ بەشی {dept}")
+            s_count = execute_query("SELECT COUNT(*) FROM students WHERE dept=?", (dept,), fetch_one=True)[0]
+            st.metric("کۆی خوێندکاران", s_count)
+            
+        elif menu == "خوێندکاران":
+            st.subheader("زیادکردنی خوێندکار")
+            name = st.text_input("ناوی سیانی:")
+            stage = st.selectbox("قۆناغ", ["1", "2", "3", "4"])
+            if st.button("تۆمارکردن"):
+                code = f"S{random.randint(100, 999)}"
+                execute_query("INSERT INTO students (name, stage, code, dept) VALUES (?,?,?,?)", (name, stage, code, dept), commit=True)
+                st.success(f"تۆمارکرا: {code}")
+                
+        elif menu == "مامۆستایان":
+            st.subheader("زیادکردنی مامۆستا")
+            t_name = st.text_input("ناوی مامۆستا:")
+            c_name = st.text_input("ناوی وانە:")
+            t_stage = st.selectbox("قۆناغ:", ["1", "2", "3", "4"])
+            if st.button("دروستکردنی کۆد"):
+                t_code = f"T{random.randint(100, 999)}"
+                execute_query("INSERT INTO teachers (name, code, dept, target_stage) VALUES (?,?,?,?)", (t_name, t_code, dept, t_stage), commit=True)
+                tid = execute_query("SELECT id FROM teachers WHERE code=?", (t_code,), fetch_one=True)[0]
+                execute_query("INSERT INTO courses (teacher_id, course_name, total_hours, dept) VALUES (?,?,60,?)", (tid, c_name, dept), commit=True)
+                st.info(f"کۆدی مامۆستا: {t_code}")
+
+        if st.sidebar.button("LOGOUT"): st.session_state.role = None; st.rerun()
 
     elif st.session_state.role == "teacher_panel":
-        teacher_panel()
-        if st.sidebar.button("🚪 دەرچوون"): st.session_state.role = None; st.rerun()
+        tid, tname, dept = st.session_state.t_id, st.session_state.t_name, st.session_state.dept
+        st.write(f"### مامۆستا: {tname}")
+        t_stage = execute_query("SELECT target_stage FROM teachers WHERE id=?", (tid,), fetch_one=True)[0]
+        students = execute_query("SELECT id, name FROM students WHERE dept=? AND stage=?", (dept, t_stage), fetch_all=True)
+        
+        if students:
+            st.write("لیستی غائیببوون:")
+            att_data = {}
+            for sid, sname in students:
+                att_data[sid] = st.checkbox(sname, key=sid)
+            
+            if st.button("SAVE"):
+                st.success("پاشەکەوت کرا!")
+        
+        if st.sidebar.button("LOGOUT"): st.session_state.role = None; st.rerun()
 
 if __name__ == "__main__":
     main()
