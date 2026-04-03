@@ -39,59 +39,71 @@ def execute_query(query, params=(), fetch_all=False, fetch_one=False, commit=Fal
        return False
    finally: conn.close()
  
-# --- 2. Professional UI Style (ڕەنگی تۆخ و گونجاو بۆ مۆبایل) ---
+# --- 2. Professional UI Style (چاککراو بۆ مۆبایل) ---
 def apply_theme():
    st.markdown("""
        <style>
        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
        
-       /* ڕەنگی گشتی نووسینەکان بۆ ئەوەی لەسەر سپی دیار بن */
-       html, body, [class*="st-"], .stMarkdown p, label, .stSelectbox div, .stRadio div {
+       /* ڕەنگی ڕەشی تۆخ بۆ هەموو نووسینەکان */
+       html, body, [class*="st-"], .stMarkdown p, label, .stSelectbox label, .stRadio label {
            font-family: 'Noto Sans Arabic', sans-serif !important;
            direction: rtl !important;
            text-align: right !important;
-           color: #000000 !important; /* ڕەنگی ڕەشی تەواو بۆ پیتەکان */
+           color: #000000 !important;
        }
        
        .stApp { background-color: #FFFFFF; }
        
-       /* ستایلی بەتنەکان */
+       /* چاککردنی Sidebar بۆ ئەوەی پیتەکان نەبنە ستوونی */
+       [data-testid="stSidebar"] {
+           min-width: 300px !important;
+           background-color: #f8fafc !important;
+           border-left: 3px solid #008080 !important;
+       }
+       
+       [data-testid="stSidebar"] .stMarkdown p {
+           white-space: nowrap !important;
+       }
+
+       /* بەتنە مۆدێرنەکان */
        div.stButton > button {
-           background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%) !important;
+           background-color: #008080 !important;
            color: white !important;
            border-radius: 12px !important;
+           padding: 10px 24px !important;
            width: 100% !important;
-           min-height: 50px !important;
+           border: none !important;
            font-weight: bold !important;
            font-size: 18px !important;
-           border: none !important;
-           box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
+           box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+           transition: all 0.3s ease !important;
        }
-
-       /* ڕەنگی ناونیشانەکان */
-       h1 { color: #0F766E !important; font-weight: 700 !important; text-align: center !important; }
-       h2, h3 { color: #115E59 !important; font-weight: 600 !important; }
        
-       /* دیاریکردنی ڕەنگی ناو نوسینەکان (Input fields) */
-       input { color: #000000 !important; background-color: #f0f2f6 !important; }
-
-       /* ڕێکخستنی Sidebar بۆ ئەوەی لە مۆبایلدا مێنۆکە جوان بێت */
-       [data-testid="stSidebar"] {
-           background-color: #F8FAFC !important;
-           border-left: 2px solid #0D9488 !important;
+       div.stButton > button:hover {
+           background-color: #006666 !important;
+           box-shadow: 0 6px 15px rgba(0,0,0,0.2) !important;
+           transform: translateY(-2px) !important;
        }
+
+       /* ستایلی Input-ەکان */
+       .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+           border-radius: 10px !important;
+           border: 1px solid #008080 !important;
+       }
+
+       h1 { color: #004d4d !important; text-align: center; font-size: 28px !important; }
+       h2, h3 { color: #006666 !important; margin-bottom: 10px !important; }
        </style>
    """, unsafe_allow_html=True)
  
 # --- 3. Admin Panel Logic ---
 def admin_panel():
-   dept = st.session_state.get('dept', 'نادیار')
-   
-   # لێرەدا مێنۆکە (Sidebar) دروست دەکەین کە بە کلیک لە مۆبایلدا لادەچێت و دێتەوە
+   dept = st.session_state.get('dept', 'بەش')
    with st.sidebar:
-       st.markdown(f"<h2 style='color:#0D9488;'>🏢 بەشی {dept}</h2>", unsafe_allow_html=True)
+       st.markdown(f"### 🏢 بەشی {dept}")
        st.divider()
-       menu = st.radio("دیاریکردنی بەش:", ["👤 خوێندکاران", "👨‍🏫 مامۆستایان", "📊 ڕاپۆرتی غائیبی"])
+       menu = st.radio("دیاریکردنی بەش:", ["👤 خوێندکاران", "👨‍🏫 مامۆستایان", "📊 ڕاپۆرتی گشتی"])
        st.divider()
        if st.button("🚪 دەرچوون"):
            st.session_state.role = None
@@ -122,11 +134,11 @@ def admin_panel():
        if students:
            for sid, sname, sstage, sgrp, scode in students:
                c1, c2, c3, c4 = st.columns([3, 1, 1, 1.5])
-               c1.write(f"**{sname}** \n(Code: {scode})")
+               c1.write(f"**{sname}**\n({scode})")
                c2.info(f"ق {sstage}")
                c3.info(f"گ {sgrp}")
                with c4.popover("🗑️ سڕینەوە"):
-                   if st.button("بەڵێ، بسڕەوە", key=f"del_s_{sid}"):
+                   if st.button("بەڵێ", key=f"del_s_{sid}"):
                        execute_query("DELETE FROM students WHERE id=?", (sid,), commit=True)
                        st.rerun()
                st.divider()
@@ -142,32 +154,30 @@ def admin_panel():
                if st.form_submit_button("💾 تۆمارکردن"):
                    if t_name and c_name:
                        t_code = f"T{random.randint(1000, 9999)}"
-                       execute_query("INSERT INTO teachers (name, code, dept, target_stage) VALUES (?,?,?,?)",
-                                    (t_name, t_code, dept, t_stage), commit=True)
-                       tid_res = execute_query("SELECT id FROM teachers WHERE code=?", (t_code,), fetch_one=True)
-                       if tid_res:
+                       if execute_query("INSERT INTO teachers (name, code, dept, target_stage) VALUES (?,?,?,?)",
+                                    (t_name, t_code, dept, t_stage), commit=True):
+                           tid = execute_query("SELECT id FROM teachers WHERE code=?", (t_code,), fetch_one=True)[0]
                            execute_query("INSERT INTO courses (teacher_id, course_name, total_hours, dept) VALUES (?,?,?,?)",
-                                        (tid_res[0], c_name, t_hours, dept), commit=True)
-                           st.success(f"تۆمارکرا. کۆدی چوونەژوورەوە: {t_code}")
+                                        (tid, c_name, t_hours, dept), commit=True)
+                           st.success(f"کۆدی چوونەژوورەوە: {t_code}")
                            st.rerun()
-
-   elif "ڕاپۆرت" in menu:
-       st.markdown("### 📊 ڕاپۆرتی گشتی غائیببوون")
-       sel_stage = st.selectbox("قۆناغ هەڵبژێرە:", ["1", "2", "3", "4"])
-       # لێرە کۆدی ڕاپۆرتەکە جێگیر دەکرێت
  
+   elif "ڕاپۆرت" in menu:
+       st.markdown("### 📊 ڕاپۆرتی گشتی")
+       st.info("لێرەدا دەتوانیت ڕاپۆرتی غائیببوونی خوێندکاران بەپێی قۆناغەکان ببینیت.")
+
 # --- 4. Teacher Panel Logic ---
 def teacher_panel():
    tid, tname, dept = st.session_state.t_id, st.session_state.t_name, st.session_state.dept
-   t_info = execute_query("SELECT target_stage FROM teachers WHERE id=?", (tid,), fetch_one=True)
    course = execute_query("SELECT id, course_name FROM courses WHERE teacher_id=?", (tid,), fetch_one=True)
+   t_info = execute_query("SELECT target_stage FROM teachers WHERE id=?", (tid,), fetch_one=True)
    
-   if not course or not t_info: st.error("وانە دیارینەکراوە"); return
+   if not course: st.error("وانە بۆ ئەم مامۆستایە دیاری نەکراوە"); return
    cid, cname, target_stage = course[0], course[1], t_info[0]
  
-   st.markdown(f"<div style='background-color:#f0f2f6; padding:15px; border-radius:10px; border-right:5px solid #0D9488;'><h2>بەخێربێیت مامۆستا {tname}</h2><p>وانە: {cname} | قۆناغ: {target_stage}</p></div>", unsafe_allow_html=True)
+   st.markdown(f"### 👨‍🏫 بەخێربێیت مامۆستا {tname}")
+   st.info(f"وانە: {cname} | قۆناغ: {target_stage}")
    
-   # دوگمەی دەرچوون بۆ مامۆستا لە ناو Sidebar
    with st.sidebar:
        if st.button("🚪 دەرچوون"):
            st.session_state.role = None
@@ -188,16 +198,16 @@ def teacher_panel():
            status = col_r.radio("", ["ئامادەیە", "ئامادەنییە"], key=f"att_{sid}", horizontal=True)
            res[sid] = l_hours if status == "ئامادەنییە" else 0
        
-       if st.button("💾 پاشەکەوتکردنی ئامادەبوون"):
+       if st.button("💾 پاشەکەوتکردن"):
            for sid, h in res.items():
                execute_query("INSERT OR REPLACE INTO attendance (student_id, course_id, date, hours_absent, type, dept) VALUES (?,?,?,?,?,?)",
                             (sid, cid, str(l_date), h, l_type, dept), commit=True)
-           st.success("بە سەرکەوتووی پاشەکەوتکرا")
+           st.success("بە سەرکەوتووی تۆمارکرا")
            time.sleep(1); st.rerun()
  
 # --- 5. Main Entry ---
 def main():
-   st.set_page_config(page_title="GPU Attendance System", layout="wide", initial_sidebar_state="expanded")
+   st.set_page_config(page_title="GPU System", layout="wide")
    init_db()
    apply_theme()
    
@@ -205,14 +215,11 @@ def main():
  
    if st.session_state.role is None:
        st.markdown("<h1>زانکۆی پۆلیتەکنیکی گەرمیان</h1>", unsafe_allow_html=True)
-       st.markdown("<p style='text-align:center; font-size:20px; color:#115E59;'>سیستەمی پێشکەوتووی ئامادەبوونی خوێندکاران</p>", unsafe_allow_html=True)
+       st.markdown("<p style='text-align:center; color:gray;'>سیستەمی ئامادەبوونی خوێندکاران</p>", unsafe_allow_html=True)
        
        col1, col2 = st.columns(2)
-       if col1.button("🔑 چوونەژوورەوەی ئەدمین"): 
-           st.session_state.role = "admin_login"; st.rerun()
-       if col2.button("👨‍🏫 چوونەژوورەوەی مامۆستا"): 
-           st.session_state.role = "teacher_login"; st.rerun()
-       st.markdown("<br><p style='text-align:center; color:gray;'>گەشەپێدەر: ئەندازیار لەنیا حازم کەریم</p>", unsafe_allow_html=True)
+       if col1.button("🔑 چوونەژوورەوەی ئەدمین"): st.session_state.role = "admin_login"; st.rerun()
+       if col2.button("👨‍🏫 چوونەژوورەوەی مامۆستا"): st.session_state.role = "teacher_login"; st.rerun()
  
    elif st.session_state.role == "admin_login":
        st.markdown("### 🔑 چوونەژوورەوەی ئەدمین")
@@ -224,12 +231,12 @@ def main():
            if res:
                st.session_state.dept, st.session_state.type = res[0], res[1]
                st.session_state.role = "admin_panel"; st.rerun()
-           else: st.error("ئیمەیڵ یان پاسوۆرد هەڵەیە")
+           else: st.error("زانیارییەکان هەڵەن")
        if st.button("🔙 گەڕانەوە"): st.session_state.role = None; st.rerun()
  
    elif st.session_state.role == "teacher_login":
        st.markdown("### 👨‍🏫 چوونەژوورەوەی مامۆستا")
-       t_code = st.text_input("کۆدی تایبەتی مامۆستا:", type="password")
+       t_code = st.text_input("کۆدی مامۆستا:", type="password")
        if st.button("داخڵبوون"):
            res = execute_query("SELECT id, name, dept FROM teachers WHERE code=?", (t_code,), fetch_one=True)
            if res:
@@ -239,17 +246,17 @@ def main():
        if st.button("🔙 گەڕانەوە"): st.session_state.role = None; st.rerun()
  
    elif st.session_state.role == "admin_panel":
-       if st.session_state.get('type') == "زانکۆ":
-           st.markdown("### 🏛️ بەڕێوەبردنی بەشەکانی زانکۆ")
-           with st.form("new_dept"):
-               e = st.text_input("ئیمەیڵ بۆ بەش:")
-               p = st.text_input("پاسوۆرد بۆ بەش:", type="password")
-               d = st.selectbox("ناوی بەشەکە:", ["ئەندازیاری کارەبا و کۆمپیوتەر", "شیکاری نەخۆشیەکان", "تەکنیکی پەرستاری", "تەکنەلۆجیای زانیاری", "کارگێڕی کار"])
+       if st.session_state.type == "زانکۆ":
+           st.markdown("### 🏛️ بەڕێوەبردنی بەشەکان")
+           with st.form("dept_form"):
+               e = st.text_input("ئیمەیڵ:")
+               p = st.text_input("پاسوۆرد:", type="password")
+               d = st.selectbox("بەش:", ["تەکنەلۆجیای زانیاری", "ئەندازیاری", "پەرستاری", "شیکاری نەخۆشی"])
                if st.form_submit_button("➕ دروستکردنی ئەکاونت"):
                    hp = hashlib.sha256(p.encode()).hexdigest()
                    if execute_query("INSERT INTO admins (email, password, dept, type) VALUES (?,?,?,?)", (e, hp, d, "بەش"), commit=True):
-                       st.success(f"ئەکاونتی بەشی {d} بە سەرکەوتووی دروستکرا")
-                   else: st.error("ئەم ئیمەیڵە پێشتر بەکارهاتووە")
+                       st.success(f"ئەکاونتی بەشی {d} دروستکرا")
+                   else: st.error("ئەم ئیمەیڵە پێشتر تۆمارکراوە")
            if st.sidebar.button("🚪 دەرچوون"): st.session_state.role = None; st.rerun()
        else:
            admin_panel()
