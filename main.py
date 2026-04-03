@@ -2,7 +2,7 @@
 import streamlit as st
 import sqlite3
 import hashlib
-import random
+from datetime import datetime
 
 # --- 1. Database Logic ---
 def execute_query(query, params=(), fetch_all=False, fetch_one=False, commit=False):
@@ -20,82 +20,78 @@ def execute_query(query, params=(), fetch_all=False, fetch_one=False, commit=Fal
        conn.close()
    return result
 
-# --- 2. High-Contrast Mobile UI ---
-def apply_high_contrast_theme():
+# --- 2. Ultra-Stable Mobile UI ---
+def apply_stable_theme():
    st.markdown("""
        <style>
        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
        
-       /* پاشبنەمایەکی زۆر کاڵ بۆ ئەوەی نووسینەکان دیار بن */
+       /* ڕێکخستنی لاپەڕە */
        .stApp {
-           background-color: #F8FAFC !important;
+           background-color: #FFFFFF !important;
            font-family: 'Noto Sans Arabic', sans-serif !important;
            direction: rtl;
        }
 
-       /* چاککردنی Sidebar */
+       /* چاککردنی Sidebar بۆ ئەوەی نەچێتە سەر بەتنەکان */
        [data-testid="stSidebar"] {
-           background-color: #FFFFFF !important;
-           border-left: 2px solid #0D9488;
+           background-color: #F8FAFC !important;
+           border-left: 3px solid #0D9488 !important;
+           z-index: 1000000 !important;
        }
 
-       /* کارتەکان بە ڕەنگی سپی تەواو */
-       .custom-card {
-           background-color: #FFFFFF;
-           padding: 25px;
-           border-radius: 15px;
-           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-           margin-bottom: 20px;
-           border-top: 6px solid #0D9488;
-           text-align: center;
-           border: 1px solid #E2E8F0;
-       }
-
-       /* تۆخکردنەوەی ڕەنگی هەموو نووسینەکان بۆ ئەوەی بە جوانی دیار بن */
-       h1, h2, h3, .stMarkdown, p, label, .stSelectbox label {
-           color: #0F172A !important; /* ڕەشی تۆخ */
-           text-align: right;
-           font-weight: 700 !important;
-       }
-
-       /* ڕەنگی ناو سندووقەکانی نووسین */
-       .stTextInput input {
-           color: #000000 !important;
-           background-color: #FFFFFF !important;
-           border: 1px solid #CBD5E1 !important;
-       }
-
-       /* بەتنەکان بە ڕەنگی تۆخ و ڕوون */
+       /* چاککردنی بەتنەکان - قەبارەی جێگیر بۆ مۆبایل */
        div.stButton > button {
            width: 100% !important;
-           min-height: 55px !important;
+           height: 60px !important; /* قەبارەی جێگیر */
            background-color: #0D9488 !important;
            color: #FFFFFF !important;
            border-radius: 12px !important;
+           font-size: 20px !important;
+           font-weight: 800 !important;
+           border: 2px solid #08665E !important;
+           margin-top: 15px !important;
+           display: block !important;
+       }
+
+       /* کارتەکان بۆ ئەوەی نووسینەکان تێکەڵ نەبن */
+       .custom-card {
+           background-color: #FFFFFF;
+           padding: 20px;
+           border-radius: 15px;
+           border: 2px solid #E2E8F0;
+           margin-bottom: 20px;
+           text-align: center;
+       }
+
+       /* نووسینەکان بە ڕەشی زۆر تۆخ */
+       h1, h2, h3, p, label, .stMarkdown {
+           color: #000000 !important;
+           text-align: right !important;
+           font-weight: 700 !important;
+       }
+
+       /* چاککردنی Input بۆ مۆبایل */
+       .stTextInput input {
+           height: 50px !important;
            font-size: 18px !important;
-           font-weight: bold !important;
-           border: none !important;
-           box-shadow: 0 4px 6px rgba(13, 148, 136, 0.2) !important;
+           color: #000000 !important;
+           border: 2px solid #0D9488 !important;
        }
        </style>
    """, unsafe_allow_html=True)
 
 def main():
-   st.set_page_config(page_title="GPU Attendance", layout="centered")
-   apply_high_contrast_theme()
+   st.set_page_config(page_title="GPU System", layout="centered")
+   apply_stable_theme()
    
    if 'role' not in st.session_state: st.session_state.role = None
 
    # Header
-   st.markdown("""
-       <div class='custom-card'>
-           <h1 style='font-size: 26px;'>زانکۆی پۆلیتەکنیکی گەرمیان</h1>
-           <p style='color: #334155 !important;'>سیستەمی پێشکەوتووی ئامادەبوونی خوێندکاران</p>
-       </div>
-   """, unsafe_allow_html=True)
+   st.markdown("<div class='custom-card'><h1>زانکۆی پۆلیتەکنیکی گەرمیان</h1><p>سیستەمی ئامادەبوون</p></div>", unsafe_allow_html=True)
 
    if st.session_state.role is None:
-       st.write("### تکایە جۆری چوونەژوورەوە هەڵبژێرە:")
+       st.markdown("<h3 style='text-align: center;'>بچۆ ژوورەوە:</h3>", unsafe_allow_html=True)
        if st.button("🔑 چوونەژوورەوەی ئەدمین"): 
            st.session_state.role = "admin_login"; st.rerun()
        if st.button("🌙 چوونەژوورەوەی مامۆستا"): 
@@ -103,23 +99,23 @@ def main():
 
    elif st.session_state.role == "admin_login":
        st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-       st.write("## چوونەژوورەوەی ئەدمین")
+       st.write("### داخڵکردنی زانیاری")
        email = st.text_input("ئیمەیڵ:")
        pw = st.text_input("پاسوۆرد:", type="password")
-       if st.button("چوونەژوورەوە"):
+       if st.button("داخڵبوون"):
            h = hashlib.sha256(pw.encode()).hexdigest()
            res = execute_query("SELECT dept, type FROM admins WHERE email=? AND password=?", (email, h), fetch_one=True)
            if res:
                st.session_state.dept, st.session_state.type, st.session_state.role = res[0], res[1], "admin_panel"
                st.rerun()
-           else: st.error("زانیارییەکان هەڵەن")
+           else: st.error("هەڵەیە!")
        if st.button("🔙 گەڕانەوە"): st.session_state.role = None; st.rerun()
        st.markdown("</div>", unsafe_allow_html=True)
 
    elif st.session_state.role == "admin_panel":
-       st.sidebar.write(f"## بەشی {st.session_state.dept}")
+       st.sidebar.markdown(f"## بەشی {st.session_state.dept}")
        menu = st.sidebar.radio("مەنیو", ["سەرەتا", "خوێندکاران", "مامۆستایان"])
-       st.markdown(f"<div class='custom-card'><h2>بەخێربێیت بۆ بەشی {menu}</h2></div>", unsafe_allow_html=True)
+       st.markdown(f"<div class='custom-card'><h2>بەشی {menu}</h2></div>", unsafe_allow_html=True)
        if st.sidebar.button("🚪 دەرچوون"):
            st.session_state.role = None; st.rerun()
 
